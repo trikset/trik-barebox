@@ -9,6 +9,7 @@
  */
 
 #include <common.h>
+#include <environment.h>
 #include <linux/clk.h>
 #include <linux/phy/phy.h>
 #include <dma.h>
@@ -1437,6 +1438,36 @@ static void dwc3_check_params(struct dwc3 *dwc)
 	}
 }
 
+static bool dwc3_want_otg_mode(void)
+{
+	const char *bootsource;
+	int recovery = 0;
+
+	if (!getenv_bool("global.board.recovery", &recovery))
+		if (recovery)
+			return true;
+
+	bootsource = getenv("global.board.bootsource");
+
+	return bootsource ? !strcmp(bootsource, "usb") : false;
+}
+
+static void dwc3_probe_recovery_mode(struct dwc3 *dwc)
+{
+	if (!of_machine_is_compatible("diasom,ds-rk3568-som") &&
+	    !of_machine_is_compatible("diasom,ds-rk3588-btb") &&
+	    !of_machine_is_compatible("diasom,ds-rk3588-smarc"))
+		return;
+
+	if (!dwc3_want_otg_mode())
+		return;
+
+	/* Force to peripheral mode only for OTG port */
+	if (!strcmp(dwc->dev->name, "fcc00000.usb@fcc00000.of") ||
+	    !strcmp(dwc->dev->name, "fc000000.usb@fc000000.of"))
+		dwc->dr_mode = USB_DR_MODE_PERIPHERAL;
+}
+
 int dwc3_core_probe(const struct dwc3_probe_data *data)
 {
 	struct dwc3		*dwc = data->dwc;
@@ -1449,6 +1480,8 @@ int dwc3_core_probe(const struct dwc3_probe_data *data)
 	dwc->regs = IOMEM(res->start) + DWC3_GLOBALS_REGS_START;
 
 	dwc3_get_properties(dwc);
+
+	dwc3_probe_recovery_mode(dwc);
 
 	dwc3_get_software_properties(dwc, &data->properties);
 
