@@ -1,0 +1,43 @@
+#!/bin/sh
+
+global.linux.bootargs.dyn.root="ro rootdelay=3"
+
+if [ -f /mnt/mmc1.2/boot/Image.gz ]; then
+	echo "Booting from SD (Image.gz)"
+
+	DTB=/mnt/mmc1.2/boot/rk3568-diasom-som-evb.dtb
+
+	global.bootm.root_dev=mmc1.2
+	global.bootm.image=/mnt/mmc1.2/boot/Image.gz
+elif [ -f /mnt/mmc1.2/boot/vmlinuz ]; then
+	echo "Booting from SD (vmlinuz)"
+
+	DTB=/mnt/mmc1.2/boot/rk3568-diasom-som-evb.dtb
+
+	global.bootm.root_dev=mmc1.2
+	global.bootm.image=/mnt/mmc1.2/boot/vmlinuz
+
+	if [ -f /mnt/mmc1.2/boot/initrd.img ]; then
+		global.bootm.initrd=/mnt/mmc1.2/boot/initrd.img
+		global.linux.bootargs.dyn.root="ro rootwait"
+	fi
+elif [ -f /mnt/mmc0.2/boot/Image.gz ]; then
+	echo "Booting from eMMC (Image.gz)"
+
+	DTB=/mnt/mmc0.2/boot/rk3568-diasom-som-evb.dtb
+
+	global.bootm.root_dev=mmc0.2
+	global.bootm.image=/mnt/mmc0.2/boot/Image.gz
+else
+	echo "Boot image not found!"
+	exit 1
+fi
+
+if [ -f $DTB ]; then
+	echo "Using external devicetree blob from $DTB"
+	global.bootm.oftree=$DTB
+else
+	echo "Using internal devicetree blob"
+fi
+
+exit 0

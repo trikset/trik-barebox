@@ -1,0 +1,32 @@
+#!/bin/sh
+
+usbgadget -d
+
+global.autoboot_timeout=2
+
+# Temporary solution to use with JETSON-IO-BASE-B
+if of_compatible -k diasom,ds-rk3568-som-sodimm-evb ; then
+	recover=1
+fi
+
+if [ "$global.board.bootsource" = "usb" ]; then
+	recover=1
+	global.autoboot=abort
+fi
+
+if [ "$global.board.recovery" = "true" ]; then
+	recover=1
+	global.autoboot_timeout=10
+fi
+
+[ "$recover" = "1" ] || exit 0
+
+if [ -e /dev/mmc0.root ]; then
+	MS="-S"
+	global.system.partitions="/dev/mmc0.root(rootfs)"
+fi
+
+global.fastboot.partitions="/dev/mmc0(emmc)"
+usbgadget -a -A $MS
+
+exit 0
