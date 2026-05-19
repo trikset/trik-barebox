@@ -1,0 +1,261 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
+/* SPDX-FileCopyrightText: Alexander Shiyan <shc_work@mail.ru> */
+
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/pinctrl/rockchip.h>
+
+&{/} {
+	aliases {
+		rtc0 = &rtc;
+	};
+
+	vcc3v3_pcie30_clk_en: vcc3v3-pcie30-clk-en-regulator {
+		pinctrl-names = "default";
+		pinctrl-0 = <&pcie30_clk_en_pins>;
+		compatible = "regulator-fixed";
+		/* Fixup for PCI-e in the bootloader */
+		regulator-always-on;
+		regulator-boot-on;
+		gpio = <&gpio1 RK_PB0 GPIO_ACTIVE_LOW>;
+		regulator-name = "vcc3v3_pcie30_clk_en";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		startup-delay-us = <20000>;
+		vin-supply = <&vcc3v3_sys>;
+	};
+
+	vcc_sdmmc0: vcc-sdmmc0-regulator {
+		pinctrl-names = "default";
+		pinctrl-0 = <&sdmmc0_vcc_pins>;
+		compatible = "regulator-fixed";
+		enable-active-high;
+		gpio = <&gpio0 RK_PB6 GPIO_ACTIVE_HIGH>;
+		regulator-name = "vcc_sdmmc0";
+		regulator-boot-on;
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		startup-delay-us = <20000>;
+		vin-supply = <&vcc3v3_sys>;
+	};
+};
+
+&exp {
+	gpio-line-names =
+		/* P0_0-7 */
+		"GPIO8", "GPIO9", "GPIO10", "GPIO11",
+		"GPIO12", "GPIO13", "GPIO4/HDA_RST#", "LID#",
+		/* P1_0-7 */
+		"SLEEP#", "CHARGING#", "CHARGER_PRSNT#", "GPIO7",
+		"BATLOW#", "TEST#", "SATA_ACT#", "",
+		/* P2_0-7 */
+		"", "", "", "",
+		"", "", "", "";
+};
+
+&i2c9 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	/* 24aa025e48 */
+	eeprom@50 {
+		compatible = "atmel,24c02";
+		reg = <0x50>;
+		pagesize = <16>;
+		vcc-supply = <&vcc3v3_sys>;
+
+		nvmem-layout {
+			compatible = "fixed-layout";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			mac0: mac-address@fa {
+				reg = <0xfa 0x06>;
+				read-only;
+			};
+		};
+	};
+
+	/* 24aa025e48 */
+	eeprom@51 {
+		compatible = "atmel,24c02";
+		reg = <0x51>;
+		pagesize = <16>;
+		vcc-supply = <&vcc3v3_sys>;
+
+		nvmem-layout {
+			compatible = "fixed-layout";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			mac1: mac-address@fa {
+				reg = <0xfa 0x06>;
+				read-only;
+			};
+		};
+	};
+
+	/* m41t62lc6f */
+	rtc: rtc@68 {
+		pinctrl-names = "default";
+		pinctrl-0 = <&rtc_pins>;
+		compatible = "st,m41t62";
+		reg = <0x68>;
+		interrupt-parent = <&gpio4>;
+		interrupts = <RK_PC4 IRQ_TYPE_LEVEL_LOW>;
+		wakeup-source;
+		#clock-cells = <0>;
+	};
+};
+
+&gmac0 {
+	nvmem-cells = <&mac0>;
+	nvmem-cell-names = "mac-address";
+};
+
+&gmac1 {
+	nvmem-cells = <&mac1>;
+	nvmem-cell-names = "mac-address";
+};
+
+&gpio0 {
+	gpio-line-names =
+		/* GPIO0 A0-A7 */
+		"GMAC1_PHY_RESET#", "TCADC_SHUT_M0", "PMIC_SLEEP", "PMIC_IRQ#",
+		"SDMMC0_DET#", "TEST1", "LED1", "FLASH_V_SELECT",
+		/* GPIO0 B0-B7 */
+		"CLK_32K_IN", "I2C0_SCL", "I2C0_SDA", "CAN0_TX",
+		"CAN0_RX", "", "SDMMC0_PWR_EN", "",
+		/* GPIO0 C0-C7 */
+		"LED2", "RTC_SQW", "USB_OTG_EN_OC#", "LCD0_BKLT_PWM",
+		"LCD1_BKLT_PWM", "GMAC0_PHY_RESET#", "TEST5", "",
+		/* GPIO0 D0-D7 */
+		"UART2_RX", "UART2_TX", "", "",
+		"", "", "", "";
+};
+
+&gpio1 {
+	gpio-line-names =
+		/* GPIO1 A0-A7 */
+		"I2C3_SDA", "I2C3_SCL", "GPIO0/CAM0_PWR#", "CARRIER_STBY#",
+		"UART4_RX", "UART4_RTSn", "UART4_TX", "UART4_CTSn",
+		/* GPIO1 B0-B7 */
+		"PCIE30_CLK_EN", "PIC20_WAKEn_M2", "GPIO1/CAM1_PWR#", "GPIO3/CAM1_RST#",
+		"eMMC_D0", "eMMC_D1", "eMMC_D2", "eMMC_D3",
+		/* GPIO1 C0-C7 */
+		"eMMC_D4", "eMMC_D5", "eMMC_D6", "eMMC_D7",
+		"eMMC_CMD", "eMMC_CLK", "eMMC_DS", "eMMC_RESET#",
+		/* GPIO1 D0-D7 */
+		"", "", "", "",
+		"", "SDMMC_D0", "SDMMC_D1", "SDMMC0_D2";
+};
+
+&gpio2 {
+	gpio-line-names =
+		/* GPIO2 A0-A7 */
+		"SDMMC0_D3", "SDMMC0_CMD", "SDMMC0_CLK", "GMAC0_RXD2",
+		"GMAC0_RXD3", "GMAC0_RXCLK", "GMAC0_TXD2", "GMAC0_TXD3",
+		/* GPIO2 B0-B7 */
+		"GMAC0_TXCLK", "CAN2_RX", "CAN2_TX", "GMAC0_TXD0",
+		"GMAC0_TXD1", "GMAC0_TXEN", "GMAC0_RXD0", "GMAC0_RXD1",
+		/* GPIO2 C0-C7 */
+		"GMAC0_RXDV_CRS", "SPI2_CK", "SPI2_DIN", "SPI2_DO",
+		"SPI2_CS0#", "SPI2_CS1#", "PCIE30X2_PERSTn", "",
+		/* GPIO2 D0-D7 */
+		"LCD0_VDD_EN", "GPIO_EXP_INT", "PCIE30X1_CLKREQn_M1", "PCIE30X1_WAKEn_M1",
+		"PCIE30X2_CLKREQn_M1", "PCIE30X2_WAKEn_M1", "WDT_TIME_OUT#", "UART8_TX";
+};
+
+&gpio3 {
+	gpio-line-names =
+		/* GPIO3 A0-A7 */
+		"UART8_RX", "PCIE30X1_PERSTn", "TEST10", "TEST12",
+		"TEST11", "TEST2", "TEST13", "TEST3",
+		/* GPIO3 B0-B7 */
+		"TEST8", "TEST9", "TEST14", "TEST4",
+		"TEST6", "TEST7", "GPIO2/CAM0_RST#", "GPIO6/TACHIN",
+		/* GPIO3 C0-C7 */
+		"GPIO5/PWM_OUT", "PCIE20_PERSTn", "UART5_TX", "UART5_RX",
+		"LCD1_BKLT_EN", "LCD1_VDD_EN", "I2S1_MCLK", "I2S1_CK",
+		/* GPIO3 D0-D7 */
+		"I2S1_LRCK", "I2S1_SDOUT", "I2S1_SDIN", "SMB_ALERT#",
+		"RESET_OUT#", "eDP0_HPD/DSI0_TE", "GMAC1_TXD2_M1", "GMAC1_TXD3_M1";
+};
+
+&gpio4 {
+	gpio-line-names =
+		/* GPIO4 A0-A7 */
+		"GMAC1_TXCLK_M1", "GMAC1_RXD2_M1", "GMAC1_RXD3_M1", "GMAC1_RXCLK_M1",
+		"GMAC1_TXD0_M1", "GMAC1_TXD1_M1", "GMAC1_TXEN_M1", "GMAC1_RXD0_M1",
+		/* GPIO4 B0-B7 */
+		"GMAC1_RXD1_M1", "GMAC1_RXDV_CRS_M1", "I2C4_SDA", "I2C4_SCL",
+		"I2C2_SDA", "I2C2_SCL", "MDC", "MDIO",
+		/* GPIO4 C0-C7 */
+		"CAM_MCK", "LCD0_BKLT_EN", "SPI3_CK", "SPI3_DO",
+		"RTC_IRQ#", "SPI3_DIN", "SPI3_CS0#", "HDMI_I2C_SCL",
+		/* GPIO4 D0-D7 */
+		"HDMI_I2C_SDA", "SPI3_CS1#", "SDMMC0_WP", "",
+		"", "", "", "";
+};
+
+&pps {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pps_pins>;
+	gpios = <&gpio0 RK_PC1 GPIO_ACTIVE_HIGH>;
+};
+
+&sdmmc0 {
+	vmmc-supply = <&vcc_sdmmc0>;
+};
+
+&pinctrl {
+	pinctrl-names = "default";
+	pinctrl-0 = <&smarc_pins>;
+
+	mmc {
+		sdmmc0_vcc_pins: sdmmc0-vcc-pins {
+			rockchip,pins =
+				<0 RK_PB6 RK_FUNC_GPIO &pcfg_pull_none>;	/* SDMMC0_PWR_EN */
+		};
+	};
+
+	pci {
+		pcie30_clk_en_pins: pcie30-clk-en-pins {
+			rockchip,pins =
+				<1 RK_PB0 RK_FUNC_GPIO &pcfg_pull_none>;	/* PCIE30_CLK_EN */
+		};
+	};
+
+	pps {
+		pps_pins: pps-pins {
+			rockchip,pins =
+				<0 RK_PC1 RK_FUNC_GPIO &pcfg_pull_none>;	/* RTC_SQW */
+		};
+	};
+
+	rtc {
+		rtc_pins: rtc-pins {
+			rockchip,pins =
+				<4 RK_PC4 RK_FUNC_GPIO &pcfg_pull_none>;	/* RTC_IRQ */
+		};
+	};
+
+	smarc {
+		/* Unused */
+		smarc_pins: smarc-pins {
+			rockchip,pins =
+				<1 RK_PA2 RK_FUNC_GPIO &pcfg_pull_none>,	/* GPIO0 */
+				<3 RK_PB6 RK_FUNC_GPIO &pcfg_pull_none>,	/* GPIO2 */
+				<3 RK_PC0 RK_FUNC_GPIO &pcfg_pull_none>,	/* GPIO5 */
+				<3 RK_PB7 RK_FUNC_GPIO &pcfg_pull_none>,	/* GPIO6 */
+				<3 RK_PD3 RK_FUNC_GPIO &pcfg_pull_none>,	/* SMB_ALERT# */
+				<4 RK_PC0 RK_FUNC_GPIO &pcfg_pull_none>,	/* CAM_MCK */
+				<3 RK_PC4 RK_FUNC_GPIO &pcfg_pull_none>,	/* LCD1_BKLT_EN */
+				<3 RK_PC5 RK_FUNC_GPIO &pcfg_pull_none>,	/* LCD1_VDD_EN */
+				<3 RK_PD5 RK_FUNC_GPIO &pcfg_pull_none>;	/* eDP0_HPD/DSI0_TE */
+		};
+	};
+};
