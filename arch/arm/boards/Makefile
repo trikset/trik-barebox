@@ -29,6 +29,7 @@ obj-$(CONFIG_MACH_CFA10036)			+= crystalfontz-cfa10036/
 obj-$(CONFIG_MACH_CHUMBY)			+= chumby_falconwing/
 obj-$(CONFIG_MACH_CLEP7212)			+= clep7212/
 obj-$(CONFIG_MACH_DFI_FS700_M60)		+= dfi-fs700-m60/
+obj-$(CONFIG_MACH_DIASOM_DS_RK3568)		+= diasom-rk3568/
 obj-$(CONFIG_MACH_DIGI_CCIMX6ULSBCPRO)		+= digi-ccimx6ulsom/
 obj-$(CONFIG_MACH_EXYNOS)			+= samsung-exynos/
 obj-$(CONFIG_MACH_DUCKBILL)			+= duckbill/
